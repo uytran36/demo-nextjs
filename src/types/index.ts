@@ -1,3 +1,5 @@
+import { JSXElementConstructor, ReactElement } from "react";
+
 export type Meta = {
   id: string;
   title: string;
@@ -6,6 +8,6 @@ export type Meta = {
 };
 
 export type BlogPost = {
-  meata: Meta;
-  content: any;
+  meta: Meta;
+  content: ReactElement<any, string | JSXElementConstructor<any>>;
 };

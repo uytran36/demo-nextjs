@@ -1,5 +1,6 @@
 import { BlogPost, Meta } from "@/types";
 import axios from "axios";
+import { compileMDX } from "next-mdx-remote/rsc";
 
 type FileTree = {
   tree: [
@@ -9,7 +10,9 @@ type FileTree = {
   ];
 };
 
-export async function getPostsByFilename(
+type CompileMDXType = Omit<Meta, "id">;
+
+export async function getPostByName(
   fileName: string
 ): Promise<BlogPost | undefined> {
   const res = await axios.get(`${process.env.API_URL}/posts/${fileName}`);
@@ -22,6 +25,24 @@ export async function getPostsByFilename(
   if (rawMDX === "404. not found") {
     return undefined;
   }
+
+  const { frontmatter, content } = await compileMDX<CompileMDXType>({
+    source: rawMDX,
+  });
+
+  const id = fileName.replace(".mdx", "");
+
+  const blogPostObj: BlogPost = {
+    meta: {
+      id,
+      title: frontmatter.title,
+      date: frontmatter.date,
+      tags: frontmatter.tags,
+    },
+    content,
+  };
+
+  return blogPostObj;
 }
 
 export async function getPostsMeta(): Promise<Meta[] | undefined> {
@@ -42,7 +63,7 @@ export async function getPostsMeta(): Promise<Meta[] | undefined> {
   for (const file of filesArray) {
     const post = await getPostByName(file);
     if (post) {
-      const meta = post;
+      const { meta } = post;
       posts.push(meta);
     }
   }
@@ -50,4 +71,8 @@ export async function getPostsMeta(): Promise<Meta[] | undefined> {
   return posts.sort((a, b) => {
     return a.date > b.date ? -1 : 1;
   });
+}
+
+export function getSortedPostsData() {
+  return null;
 }
